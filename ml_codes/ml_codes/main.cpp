@@ -8,8 +8,11 @@
 
 #include <iostream>
 #include <vector>
-#include <Eigen/Dense>
+#include <utility>
+#include <eigen3/Eigen/Dense>
+
 using namespace std;
+using namespace Eigen;
 
 
 class Node{
@@ -201,18 +204,71 @@ struct Param{
 };
 
 class CLF_tree{
+
+private:
+    Tree t;
+
 public:
     CLF_tree(Param inp_param){};
-    CLF_tree* fit(MatrixXd X_train,int[], y_train){
+    CLF_tree* fit(MatrixXd const& X_train, MatrixXd const& y_train){
+        int best_feature_idx;
+        int best_leaf_idx;
+        double best_precision;
+        double best_split;
+        best_feature_idx = 0;
+        best_leaf_idx = 0;
+        best_precision = 0.0;
+        best_split = 0.0;
         
+        vector<double> more_sample,less_sample;
+        while(1){
+            //木の葉で回す。
+            for(auto iter = t.get_leaf_list().begin(); iter != t.get_leaf_list().end(); ++iter){
+                //木で対象データを分割する。というよりかはインデックスベクトルを作って、どのデータがどのノードかを対応づける。
+                MatrixXd sub_Mat;
+                //特徴量を回す。
+                for(int f_idx = 0; f_idx < X_train.cols(); ++f_idx){
+                    //分割場所を回す。
+                    for(int s_idx = 0; s_idx < X_train.rows(); ++s_idx){
+                        //行を回して、sampleを分割する。
+                        for(int n_idx = 0; n_idx < X_train.rows(); ++n_idx){
+                            //分岐点より低いy_trainをless_sampleにセット
+                            if(X_train(n_idx,f_idx)<=y_train(s_idx,f_idx)){
+                                less_sample.push_back(y_train(f_idx,0));
+                            }
+                            //分岐点より高いy_trainをmore_sampleにセット
+                            if(X_train(n_idx,f_idx)>y_train(s_idx,f_idx)){
+                                more_sample.push_back(y_train(f_idx,0));
+                            }
+                        }
+                        
+                        //全てのサンプルが分岐点より高いor低いとcontinue
+                        if(less_sample.size() == 0||more_sample.size() == 0){
+                            continue;
+                        }
+                        
+                        //精度を評価する。
+                        
+                        //best~にセットする。
+                    }
+                
+                }
+            }
+            
+            //条件によってbreakする？Maxdepthにを超えた場合はそれ以外の葉を対象にする。
+            
+            //条件によって枝を追加する。
+            
+            
         
-        
-        
+        }
         return this;
         
-        
     };
-    int predict(){return 0;};
+    
+    
+    
+    MatrixXd predict(){MatrixXd temp; return temp;};
     bool stop_condition(){return true;};
     Param param;
 };
@@ -280,6 +336,22 @@ int main(int argc, const char * argv[]) {
     tree.del_all_nodes();
     cout<<tree.get_leaf_list().size()<<"@7"<<endl;
     //cout<<"root_node"<<tree.root_node<<endl;
+    
+    string input;
+    
+    cout << "Hey there! Welcome to MiniDc!"
+    "If you wanna run the tests, type in tests. \n"
+    "Other wise just hit enter to continue...\n";
+    
+    getline (cin, input);
+    
+    if(input == "tests"){
+        ::testing::InitGoogleTest(&argc, argv);
+        return RUN_ALL_TESTS();
+    }
+
+    
+    
     return 0;
 }
 
