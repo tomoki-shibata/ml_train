@@ -16,59 +16,16 @@ int main(int argc, const char * argv[]) {
 */
 
 #define GTEST_HAS_TR1_TUPLE 0
+//#include "tree_tests.h"
+//#include "clf_tree_test.h"
+#include "random_forest_test.h"
+#include <random>
+#include <iostream>
 #include "gtest/gtest.h"
-#include "tree.h"
-
-namespace
-{
-    class MyTest : public ::testing::Test
-    {
-    protected:
-        MyTest()
-        {
-            
-        }
-        
-        virtual ~MyTest()
-        {
-            
-        }
-        
-        virtual void SetUp()
-        {
-            
-        }
-        
-        virtual void TearDown()
-        {
-            
-        }
-    };
-}
-
-int something(int i)
-{
-    return i;
-}
-
-TEST_F(MyTest, MyTestSuite)
-{
-    EXPECT_EQ(1, something(1));
-}
-
-TEST_F(MyTest, pinnkodaci)
-{
-    EXPECT_EQ(2, something(2));
-}
-
-TEST_F(MyTest, pinnkodaci2)
-{
-    EXPECT_EQ(1, one());
-}
-
-
+using namespace std;
 int main(int argc, const char * argv[])
 {
+
     ::testing::InitGoogleTest(&argc, (char **)argv);
     return RUN_ALL_TESTS();
 }

@@ -9,6 +9,13 @@
 /* Begin PBXBuildFile section */
 		310711712003753500A58EC0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 310711702003753500A58EC0 /* main.cpp */; };
 		31071176200375B400A58EC0 /* gtest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31071175200375B400A58EC0 /* gtest.framework */; };
+		312B2B3B200B58390091D42A /* gtest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31071175200375B400A58EC0 /* gtest.framework */; };
+		312B2B4B200BCF540091D42A /* clf_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3107117B200A0CBE00A58EC0 /* clf_tree.cpp */; };
+		3173E9BA201025BA00E419A0 /* clf_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3107117B200A0CBE00A58EC0 /* clf_tree.cpp */; };
+		3173E9BD201DD64C00E419A0 /* tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3173E9BB201DD64C00E419A0 /* tree.cpp */; };
+		3173E9BE201DD93F00E419A0 /* tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3173E9BB201DD64C00E419A0 /* tree.cpp */; };
+		3173E9C1201F527500E419A0 /* random_forest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3173E9BF201F527500E419A0 /* random_forest.cpp */; };
+		3173E9C2201F527500E419A0 /* random_forest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3173E9BF201F527500E419A0 /* random_forest.cpp */; };
 		318FCB871FE0302F005C3B25 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 318FCB861FE0302F005C3B25 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -37,7 +44,15 @@
 		3107116E2003753500A58EC0 /* google_test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = google_test; sourceTree = BUILT_PRODUCTS_DIR; };
 		310711702003753500A58EC0 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		31071175200375B400A58EC0 /* gtest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = gtest.framework; path = ../../../../../../Library/Frameworks/gtest.framework; sourceTree = "<group>"; };
-		310711772003776700A58EC0 /* tree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tree.h; sourceTree = "<group>"; };
+		31071178200A00F800A58EC0 /* tree_tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tree_tests.h; sourceTree = "<group>"; };
+		31071179200A09F100A58EC0 /* clf_tree_test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clf_tree_test.h; sourceTree = "<group>"; };
+		3107117B200A0CBE00A58EC0 /* clf_tree.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = clf_tree.cpp; sourceTree = "<group>"; };
+		3107117C200A0CBE00A58EC0 /* clf_tree.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = clf_tree.hpp; sourceTree = "<group>"; };
+		312FF0552025C36F00FE4695 /* random_forest_test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = random_forest_test.h; sourceTree = "<group>"; };
+		3173E9BB201DD64C00E419A0 /* tree.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = tree.cpp; sourceTree = "<group>"; };
+		3173E9BC201DD64C00E419A0 /* tree.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tree.hpp; sourceTree = "<group>"; };
+		3173E9BF201F527500E419A0 /* random_forest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = random_forest.cpp; sourceTree = "<group>"; };
+		3173E9C0201F527500E419A0 /* random_forest.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = random_forest.hpp; sourceTree = "<group>"; };
 		318FCB831FE0302F005C3B25 /* ml_codes */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ml_codes; sourceTree = BUILT_PRODUCTS_DIR; };
 		318FCB861FE0302F005C3B25 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -55,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				312B2B3B200B58390091D42A /* gtest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,6 +89,9 @@
 			isa = PBXGroup;
 			children = (
 				310711702003753500A58EC0 /* main.cpp */,
+				31071178200A00F800A58EC0 /* tree_tests.h */,
+				31071179200A09F100A58EC0 /* clf_tree_test.h */,
+				312FF0552025C36F00FE4695 /* random_forest_test.h */,
 			);
 			path = google_test;
 			sourceTree = "<group>";
@@ -100,7 +119,12 @@
 			isa = PBXGroup;
 			children = (
 				318FCB861FE0302F005C3B25 /* main.cpp */,
-				310711772003776700A58EC0 /* tree.h */,
+				3173E9BB201DD64C00E419A0 /* tree.cpp */,
+				3173E9BC201DD64C00E419A0 /* tree.hpp */,
+				3107117B200A0CBE00A58EC0 /* clf_tree.cpp */,
+				3107117C200A0CBE00A58EC0 /* clf_tree.hpp */,
+				3173E9BF201F527500E419A0 /* random_forest.cpp */,
+				3173E9C0201F527500E419A0 /* random_forest.hpp */,
 			);
 			path = ml_codes;
 			sourceTree = "<group>";
@@ -184,6 +208,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3173E9BE201DD93F00E419A0 /* tree.cpp in Sources */,
+				3173E9C2201F527500E419A0 /* random_forest.cpp in Sources */,
+				3173E9BA201025BA00E419A0 /* clf_tree.cpp in Sources */,
 				310711712003753500A58EC0 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -192,7 +219,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				312B2B4B200BCF540091D42A /* clf_tree.cpp in Sources */,
+				3173E9C1201F527500E419A0 /* random_forest.cpp in Sources */,
 				318FCB871FE0302F005C3B25 /* main.cpp in Sources */,
+				3173E9BD201DD64C00E419A0 /* tree.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -202,12 +232,14 @@
 		310711732003753500A58EC0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NCL947PF9Z;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -215,12 +247,14 @@
 		310711742003753500A58EC0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NCL947PF9Z;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -333,6 +367,10 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NCL947PF9Z;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -343,6 +381,10 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NCL947PF9Z;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				"HEADER_SEARCH_PATHS[arch=*]" = /usr/local/include/;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
