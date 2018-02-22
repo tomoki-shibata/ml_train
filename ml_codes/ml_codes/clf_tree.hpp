@@ -17,7 +17,7 @@
 #include <map>
 #include "tree.hpp"
 #include "gtest/gtest.h"
-using namespace std;
+
 
 class CLF_tree{
 //クラス内クラスの定義
@@ -31,8 +31,8 @@ public:
     
 protected:
     struct Tree_Split {
-        vector<int> more_idx;
-        vector<int> less_idx;
+        std::vector<int> more_idx;
+        std::vector<int> less_idx;
         int feature_idx;
         double split_value;
         double split_score = DBL_MAX;
@@ -43,9 +43,10 @@ protected:
 public:
     CLF_tree(CLF_tree_param param);
     CLF_tree();
-    void set_param(CLF_tree_param param);
-    void fit(const Eigen::MatrixXd& X_train, const Eigen::MatrixXd& y_train);
-    Eigen::MatrixXd predict(const Eigen::MatrixXd& X_test);
+    virtual ~CLF_tree();
+    virtual void set_param(CLF_tree_param param);
+    virtual void fit(const Eigen::MatrixXd& X_train, const Eigen::MatrixXd& y_train);
+    virtual Eigen::MatrixXd predict(const Eigen::MatrixXd& X_test);
 
 protected:
     Tree tree;
@@ -56,8 +57,8 @@ protected:
     CLF_tree_param param;
     
     // ノードの分割
-    virtual Tree_Split make_split(vector<int>& data_idx);
-    virtual double gini(vector<int>& more_idx, vector<int>& less_idx);
+    virtual Tree_Split make_split(std::vector<int>& data_idx);
+    virtual double gini(std::vector<int>& more_idx, std::vector<int>& less_idx);
     
     // 木の成長条件
     virtual bool is_max_depth();
@@ -65,12 +66,13 @@ protected:
     long idx_size_for_is_min_samples_split;
     
     // 木の成長
-    virtual void rc_growth_tree(vector<int>& data_idx);
-    virtual double evaluation(vector<int>& more_idx, vector<int>& less_idx);
+    virtual void rc_growth_tree(std::vector<int>& data_idx);
+    virtual void make_leaf_value(std::vector<int>& data_idx, Node* split_node);
+    virtual double evaluation(std::vector<int>& more_idx, std::vector<int>& less_idx);
     virtual bool stop_condition();
     
     //一回予測
-    virtual int one_pred(Eigen::MatrixXd& X_row);
+    virtual double one_pred(Eigen::MatrixXd& X_row);
     
     //テストクラスのフレンド宣言
     friend class ClfTreeTest;

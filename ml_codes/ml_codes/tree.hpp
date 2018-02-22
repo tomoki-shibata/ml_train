@@ -16,8 +16,6 @@
 #include <eigen3/Eigen/Dense>
 #include <map>
 
-using namespace std;
-
 class Node{
 public:
     Node* parent_node;
@@ -27,7 +25,7 @@ public:
     double split_value;
     double leaf_value;
     
-    string path;
+    std::string path;
     int depth;
     int feature_idx;
     
@@ -41,8 +39,8 @@ class Tree{
 public:
     Node* root_node;
     Node* temp_node;
-    vector<Node*> leaf_list;
-    vector<Node*> node_list;
+    std::vector<Node*> leaf_list;
+    std::vector<Node*> node_list;
     
 public:
     //コンストラクタ関連
@@ -74,7 +72,7 @@ public:
     // 参照ノードの取得
     Node* get_node();
     //葉ノードリストの取得
-    vector<Node*> get_leaf_list();
+    std::vector<Node*> get_leaf_list();
     
 };
 

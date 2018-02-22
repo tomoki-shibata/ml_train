@@ -7,7 +7,7 @@
 //
 
 #include "random_forest.hpp"
-
+using namespace std;
 ///////////////////////////////////////////////
 // Random_Forest_clf::RF_CLF_tree
 ///////////////////////////////////////////////
@@ -219,7 +219,7 @@ Eigen::MatrixXd Random_Forest_clf::predict(const Eigen::MatrixXd& X_test){
         double key = 0;
         int cnt = 0;
 
-        for(auto result_iter = result_count[i].cbegin();result_iter != result_count[i].cend();result_iter++){
+        for(auto result_iter = result_count[i].cbegin(); result_iter != result_count[i].cend(); result_iter++){
             if(result_iter->second > cnt){
                 key = result_iter->first;
                 cnt = result_iter->second;

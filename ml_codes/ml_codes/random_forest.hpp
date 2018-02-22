@@ -29,23 +29,23 @@ public:
     
     //　乱数系
     struct Rand{
-        mt19937 mt_rand;
-        virtual vector<int> row_sampling(int sample_num, int rows);
-        virtual vector<int> col_sampling(int sample_num, int cols);
+        std::mt19937 mt_rand;
+        virtual std::vector<int> row_sampling(int sample_num, int rows);
+        virtual std::vector<int> col_sampling(int sample_num, int cols);
     };
     
 private:
     // 決定木
     class RF_CLF_tree:public CLF_tree{
     protected:
-        Tree_Split make_split(vector<int>& data_idx);
+        Tree_Split make_split(std::vector<int>& data_idx);
         Random_Forest_clf* forest_pointer;
         
     public:
         //RF_CLF_tree(CLF_tree_param& param,Random_Forest_clf* forest_address);
         RF_CLF_tree();
         void set_forest(Random_Forest_clf* forest_address);
-        void fit(const Eigen::MatrixXd& X, const Eigen::MatrixXd& y, vector<int>& data_idx);
+        void fit(const Eigen::MatrixXd& X, const Eigen::MatrixXd& y, std::vector<int>& data_idx);
         
         //テストクラスのフレンド宣言
         friend class RandomForestTest;
@@ -58,7 +58,7 @@ private:
 
 //メンバの定義
 protected:
-    vector<RF_CLF_tree> forest;
+    std::vector<RF_CLF_tree> forest;
     Random_Forest_clf_param param;
     const Eigen::MatrixXd* X_train;
     const Eigen::MatrixXd* y_train;

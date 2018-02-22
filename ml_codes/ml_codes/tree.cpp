@@ -7,6 +7,7 @@
 //
 
 #include "tree.hpp"
+using namespace std;
 
 Node::Node(){
     parent_node = nullptr;

@@ -11,6 +11,8 @@
 		31071176200375B400A58EC0 /* gtest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31071175200375B400A58EC0 /* gtest.framework */; };
 		312B2B3B200B58390091D42A /* gtest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31071175200375B400A58EC0 /* gtest.framework */; };
 		312B2B4B200BCF540091D42A /* clf_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3107117B200A0CBE00A58EC0 /* clf_tree.cpp */; };
+		312B49032029FBF700A3270C /* LightGBM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 312B49012029FBF700A3270C /* LightGBM.cpp */; };
+		312B4904202EEA1E00A3270C /* LightGBM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 312B49012029FBF700A3270C /* LightGBM.cpp */; };
 		3173E9BA201025BA00E419A0 /* clf_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3107117B200A0CBE00A58EC0 /* clf_tree.cpp */; };
 		3173E9BD201DD64C00E419A0 /* tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3173E9BB201DD64C00E419A0 /* tree.cpp */; };
 		3173E9BE201DD93F00E419A0 /* tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3173E9BB201DD64C00E419A0 /* tree.cpp */; };
@@ -48,7 +50,11 @@
 		31071179200A09F100A58EC0 /* clf_tree_test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clf_tree_test.h; sourceTree = "<group>"; };
 		3107117B200A0CBE00A58EC0 /* clf_tree.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = clf_tree.cpp; sourceTree = "<group>"; };
 		3107117C200A0CBE00A58EC0 /* clf_tree.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = clf_tree.hpp; sourceTree = "<group>"; };
+		312B49012029FBF700A3270C /* LightGBM.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LightGBM.cpp; sourceTree = "<group>"; };
+		312B49022029FBF700A3270C /* LightGBM.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LightGBM.hpp; sourceTree = "<group>"; };
+		312B49052030991600A3270C /* light_gbm_test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = light_gbm_test.h; sourceTree = "<group>"; };
 		312FF0552025C36F00FE4695 /* random_forest_test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = random_forest_test.h; sourceTree = "<group>"; };
+		3160DFF8203C654E009AC6E3 /* leaf_solver_test_case_calc.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = leaf_solver_test_case_calc.csv; sourceTree = "<group>"; };
 		3173E9BB201DD64C00E419A0 /* tree.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = tree.cpp; sourceTree = "<group>"; };
 		3173E9BC201DD64C00E419A0 /* tree.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = tree.hpp; sourceTree = "<group>"; };
 		3173E9BF201F527500E419A0 /* random_forest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = random_forest.cpp; sourceTree = "<group>"; };
@@ -88,10 +94,12 @@
 		3107116F2003753500A58EC0 /* google_test */ = {
 			isa = PBXGroup;
 			children = (
+				3160DFF8203C654E009AC6E3 /* leaf_solver_test_case_calc.csv */,
 				310711702003753500A58EC0 /* main.cpp */,
 				31071178200A00F800A58EC0 /* tree_tests.h */,
 				31071179200A09F100A58EC0 /* clf_tree_test.h */,
 				312FF0552025C36F00FE4695 /* random_forest_test.h */,
+				312B49052030991600A3270C /* light_gbm_test.h */,
 			);
 			path = google_test;
 			sourceTree = "<group>";
@@ -119,12 +127,14 @@
 			isa = PBXGroup;
 			children = (
 				318FCB861FE0302F005C3B25 /* main.cpp */,
-				3173E9BB201DD64C00E419A0 /* tree.cpp */,
 				3173E9BC201DD64C00E419A0 /* tree.hpp */,
-				3107117B200A0CBE00A58EC0 /* clf_tree.cpp */,
+				3173E9BB201DD64C00E419A0 /* tree.cpp */,
 				3107117C200A0CBE00A58EC0 /* clf_tree.hpp */,
-				3173E9BF201F527500E419A0 /* random_forest.cpp */,
+				3107117B200A0CBE00A58EC0 /* clf_tree.cpp */,
 				3173E9C0201F527500E419A0 /* random_forest.hpp */,
+				3173E9BF201F527500E419A0 /* random_forest.cpp */,
+				312B49022029FBF700A3270C /* LightGBM.hpp */,
+				312B49012029FBF700A3270C /* LightGBM.cpp */,
 			);
 			path = ml_codes;
 			sourceTree = "<group>";
@@ -208,6 +218,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				312B4904202EEA1E00A3270C /* LightGBM.cpp in Sources */,
 				3173E9BE201DD93F00E419A0 /* tree.cpp in Sources */,
 				3173E9C2201F527500E419A0 /* random_forest.cpp in Sources */,
 				3173E9BA201025BA00E419A0 /* clf_tree.cpp in Sources */,
@@ -222,6 +233,7 @@
 				312B2B4B200BCF540091D42A /* clf_tree.cpp in Sources */,
 				3173E9C1201F527500E419A0 /* random_forest.cpp in Sources */,
 				318FCB871FE0302F005C3B25 /* main.cpp in Sources */,
+				312B49032029FBF700A3270C /* LightGBM.cpp in Sources */,
 				3173E9BD201DD64C00E419A0 /* tree.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

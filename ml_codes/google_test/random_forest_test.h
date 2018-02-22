@@ -11,6 +11,8 @@
 #include "gtest/gtest.h"
 #include "random_forest.hpp"
 
+using namespace std;
+
 namespace{
     class RandomForestTest : public ::testing::Test{
     protected:

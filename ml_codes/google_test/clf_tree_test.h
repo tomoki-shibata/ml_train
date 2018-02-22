@@ -12,6 +12,8 @@
 #include "gtest/gtest.h"
 #include "clf_tree.hpp"
 
+using namespace std;
+
 namespace{
     class ClfTreeTest : public ::testing::Test{
     protected:

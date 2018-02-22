@@ -9,6 +9,7 @@
 #include "clf_tree.hpp"
 #include <string>
 #include <sstream>
+using namespace std;
 
 CLF_tree::CLF_tree_param::CLF_tree_param(){
     min_samples_split = 2;
@@ -27,6 +28,9 @@ CLF_tree::CLF_tree(CLF_tree_param param){
 };
 
 CLF_tree::CLF_tree(){
+};
+
+CLF_tree::~CLF_tree(){
 };
 
 
@@ -84,32 +88,35 @@ void CLF_tree::rc_growth_tree(vector<int>& data_idx){
     
     if(leaf_flag){
         // 葉の値を作成。
-        map<double,int> leaf_count_elem;
-        for(auto leaf_iter = data_idx.cbegin();
-            leaf_iter < data_idx.cend();
-            leaf_iter++){
-            leaf_count_elem[(*y_train)(*leaf_iter,0)] += 1;
-        }
-        
-        double key = 0;
-        int cnt=0;
-        
-        for (auto iter = leaf_count_elem.cbegin();iter != leaf_count_elem.cend();++iter){
-            if (iter->second>cnt){
-                key = iter->first;
-                cnt = iter->second;
-            }
-        }
-        
-        split_node->leaf_value = key;
-        
-        stringstream path_stream;
-        path_stream << split_node->path;
-        path_stream <<"leaf_val->"<<split_node->leaf_value;
-        split_node->path = path_stream.str();
+        make_leaf_value(data_idx, split_node);
     }
 }
 
+void CLF_tree::make_leaf_value(vector<int>& data_idx,Node* split_node){
+    map<double,int> leaf_count_elem;
+    for(auto leaf_iter = data_idx.cbegin();
+        leaf_iter < data_idx.cend();
+        leaf_iter++){
+        leaf_count_elem[(*y_train)(*leaf_iter,0)] += 1;
+    }
+    
+    double key = 0;
+    int cnt=0;
+    
+    for (auto iter = leaf_count_elem.cbegin();iter != leaf_count_elem.cend();++iter){
+        if (iter->second>cnt){
+            key = iter->first;
+            cnt = iter->second;
+        }
+    }
+    
+    split_node->leaf_value = key;
+    
+    stringstream path_stream;
+    path_stream << split_node->path;
+    path_stream <<"leaf_val->"<<split_node->leaf_value;
+    split_node->path = path_stream.str();
+}
 
 
 CLF_tree::Tree_Split CLF_tree::make_split(vector<int>& data_idx){
@@ -174,7 +181,6 @@ CLF_tree::Tree_Split CLF_tree::make_split(vector<int>& data_idx){
 
 
 double CLF_tree::evaluation(vector<int>& more_idx, vector<int>& less_idx){
-
     return gini(more_idx,less_idx);
 };
 
@@ -248,7 +254,7 @@ void CLF_tree::fit(const Eigen::MatrixXd& X, const Eigen::MatrixXd& y){
     rc_growth_tree(data_idx);
     
 }
-int CLF_tree::one_pred(Eigen::MatrixXd& X_row){
+double CLF_tree::one_pred(Eigen::MatrixXd& X_row){
     
     tree.to_root_node();
     
