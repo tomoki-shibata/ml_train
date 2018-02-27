@@ -168,11 +168,14 @@ TEST_F(LightGBMTest, make_cash_result){
     
     gbm.label_list = get<0>(label_tuple);
     gbm.label_count = get<1>(label_tuple);
+    LightGBM_clf::LightGBM_clf_param param;
+    param.estimators_num = 1;
+    gbm.set_param(param);
     
     //初期化
     gbm.init_0_generation_trees(gbm.label_list, gbm.label_count);
     
-    gbm.cash_result = gbm.make_cash_result(X_train,0);
+    gbm.cash_result = gbm.make_cash_result(X_train,1);
     
     for(auto& label_and_cash:gbm.cash_result){
         double label = label_and_cash.first;
@@ -232,7 +235,7 @@ TEST_F(LightGBMTest, make_cash_result){
     gbm.forest[gbm.label_list[1]][1].tree.temp_node->leaf_value=10;
     
     
-    gbm.cash_result = gbm.make_cash_result(X_train,0);
+    gbm.cash_result = gbm.make_cash_result(X_train,1);
     
     EXPECT_EQ(log(5.0/3),gbm.cash_result[0](0,0));
     EXPECT_EQ(log(5.0/3),gbm.cash_result[0](1,0));
@@ -253,7 +256,7 @@ TEST_F(LightGBMTest, make_cash_result){
     EXPECT_EQ(log(3.0/3),gbm.cash_result[1](7,0));
     
     
-    gbm.cash_result = gbm.make_cash_result(X_train,1);
+    gbm.cash_result = gbm.make_cash_result(X_train,2);
     
     EXPECT_EQ(log(5.0/3)+2,gbm.cash_result[0](0,0));
     EXPECT_EQ(log(5.0/3)+2,gbm.cash_result[0](1,0));
@@ -499,6 +502,7 @@ TEST_F(LightGBMTest, GOS_sampling){
     
     map<double,vector<int>>gos_result = gbm.rand->GOS_sampling(f_grad, 0.3, 0.3);
     map<double,vector<int>>gos_result2 = gbm.rand->GOS_sampling(f_grad, 0.1, 0.5);
+    map<double,vector<int>>gos_result3 = gbm.rand->GOS_sampling(f_grad, 1.0, 0.0);
     vector<int> ans1{4,5,6,8,1,2};
     vector<int> ans2{8,7,6,5,3,1};
     vector<int> ans_m2_1{1,4,5,3,6,9};
@@ -506,6 +510,10 @@ TEST_F(LightGBMTest, GOS_sampling){
     vector<int> ans1_2{4,7,8,9,1,2};
     vector<int> ans2_2{8,4,2,1,0,9};
     vector<int> ans_m2_1_2{1,4,5,0,2,6};
+    
+    vector<int> ans1_3{4,5,6,7,8,9,0,1,2,3};
+    vector<int> ans2_3{8,7,6,5,4,3,2,1,0,9};
+    vector<int> ans_m2_1_3{1,4,5,7,8,0,2,3,6,9};
     
     
     for(int i = 0;i < gos_result.cbegin()->second.size() ;++i){
@@ -516,6 +524,10 @@ TEST_F(LightGBMTest, GOS_sampling){
         EXPECT_EQ(ans1_2[i], gos_result2[1][i]);
         EXPECT_EQ(ans2_2[i], gos_result2[2][i]);
         EXPECT_EQ(ans_m2_1_2[i], gos_result2[-2.1][i]);
+        
+        EXPECT_EQ(ans1_3[i], gos_result3[1][i]);
+        EXPECT_EQ(ans2_3[i], gos_result3[2][i]);
+        EXPECT_EQ(ans_m2_1_3[i], gos_result3[-2.1][i]);
     }
 }
 
@@ -532,7 +544,7 @@ TEST_F(LightGBMTest, fit){
     param.low_gradient_sampling_ratio = 0.5;
     param.estimators_num = 2;
     param.tree_param.max_depth=2;
-    param.random_seed = 0;
+    param.random_seed = 100;
     
     gbm.set_param(param);
     
@@ -554,6 +566,10 @@ TEST_F(LightGBMTest, fit){
     
     EXPECT_EQ(2,gbm.forest.size());
     EXPECT_EQ(2,gbm.forest.begin()->second.size());
+    
+    //cout<<gbm.cash_result[1]<<endl;
+    //cout<<gbm.cash_result[0]<<endl;
+    
     EXPECT_EQ("/leaf_val->1.09861",gbm.forest[0][0].tree.get_leaf_list()[0]->path);
     auto list = gbm.forest[0][1].tree.get_leaf_list();
     EXPECT_EQ("/dep_1,f_idx_0,spt_1,more/leaf_val->2",list[0]->path);
@@ -563,6 +579,7 @@ TEST_F(LightGBMTest, fit){
     EXPECT_EQ("/dep_1,f_idx_0,spt_1,more/leaf_val->-2",gbm.forest[1][1].tree.get_leaf_list()[0]->path);
     EXPECT_EQ("/dep_1,f_idx_0,spt_1,less/leaf_val->2",gbm.forest[1][1].tree.get_leaf_list()[1]->path);
     
+ 
     param.estimators_num = 5;
     gbm.set_param(param);
     
@@ -571,7 +588,7 @@ TEST_F(LightGBMTest, fit){
     
     EXPECT_EQ(5,gbm.forest.size());
     EXPECT_EQ(5,gbm.forest.begin()->second.size());
-    
+ 
 }
 
 
@@ -664,8 +681,499 @@ TEST_F(LightGBMTest, predict){
     
     result = gbm.predict(X_test);
     
-    EXPECT_EQ(y_test, result);
+    for(int i = 0; i < y_test.cols(); ++i){
+            EXPECT_EQ(y_test(i,0), result(i,0));
+    }
+ 
+}
 
+
+TEST_F(LightGBMTest, non_0_count){
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train;
+    X_train = Eigen::MatrixXd(6,4);
+    X_train <<
+    0,  0,  0,  0.001,
+    1,  0,  0,  0.001,
+    0,  0,  0,  0.001,
+    1,  1,  0,  0.001,
+    1,  1,  0,  0.001,
+    0,  1,  0,  0.001;
+    
+    vector<int> non_zero = gbm.exclusive_feature_bundling.non_0_count(X_train);
+    vector<int> ans{3,3,0,6};
+    
+    for(int i = 0; i < non_zero.size(); ++i){
+        EXPECT_EQ(non_zero[i], ans[i]);
+    }
+}
+
+
+TEST_F(LightGBMTest, conflict_count){
+    
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train;
+    X_train = Eigen::MatrixXd(6,4);
+    X_train <<
+    0,  0,  0,  0.001,
+    1,  0,  0,  0.001,
+    0,  0,  0,  0.001,
+    1,  1.3,  0,  0.001,
+    1,  -15.6,  0,  0.001,
+    0,  -1.125,  0,  0.001;
+    
+    int result = gbm.exclusive_feature_bundling.conflict_count(X_train.col(0), X_train.col(1));
+    EXPECT_EQ(2, result);
+    
+    result = gbm.exclusive_feature_bundling.conflict_count(X_train.col(0), X_train.col(2));
+    EXPECT_EQ(0, result);
+    
+    result = gbm.exclusive_feature_bundling.conflict_count(X_train.col(0), X_train.col(3));
+    EXPECT_EQ(3, result);
+    
+    result = gbm.exclusive_feature_bundling.conflict_count(X_train.col(1), X_train.col(3));
+    EXPECT_EQ(3, result);
+    
+}
+
+
+TEST_F(LightGBMTest, greedy_bundling){
+    
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train;
+    X_train = Eigen::MatrixXd(6,5);
+    X_train <<
+    0,  0,      0,  1,  -0.1,
+    1,  0,      0,  1,  0,
+    0,  0,      0,  1,  -0.1,
+    1,  1.3,    0,  1,  0,
+    1,  -15.6,  0,  1,  0,
+    0,  -1.125, 0,  1,  -0.1;
+    
+    vector<vector<int>> bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,0);
+    
+    EXPECT_EQ(3, bundles[0][0]);
+    EXPECT_EQ(2, bundles[0][1]);
+    EXPECT_EQ(4, bundles[1][0]);
+    EXPECT_EQ(0, bundles[1][1]);
+    EXPECT_EQ(1, bundles[2][0]);
+    
+    X_train = Eigen::MatrixXd(6,6);
+    X_train <<
+    1,  2,  1.3,    1,  1,  -0.1,
+    0,  2,  -15.6,  2,  1,  -0.1,
+    0,  0,  0,      3,  1,  -0.1,
+    0,  0,  0,      4,  1,  -0.1,
+    0,  0,  0,      0,  1,  -0.1,
+    0,  0,  0,      0,  0,  -0.1;
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,3);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(2, bundles[0][1]);
+    EXPECT_EQ(4, bundles[1][0]);
+    EXPECT_EQ(1, bundles[1][1]);
+    EXPECT_EQ(3, bundles[2][0]);
+    EXPECT_EQ(0, bundles[2][1]);
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,4);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(3, bundles[0][1]);
+    EXPECT_EQ(4, bundles[1][0]);
+    EXPECT_EQ(2, bundles[1][1]);
+    EXPECT_EQ(0, bundles[1][2]);
+    EXPECT_EQ(1, bundles[2][0]);
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,0);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[1][0]);
+    EXPECT_EQ(3, bundles[2][0]);
+    EXPECT_EQ(2, bundles[3][0]);
+    EXPECT_EQ(1, bundles[4][0]);
+    EXPECT_EQ(0, bundles[5][0]);
+    
+    X_train <<
+    1,  0,  0,  1,  0,   0.0,
+    0,  2,  0,  0,  1,   0.0,
+    0,  0,  1,  0,  0,   0.1,
+    1,  0,  0,  1,  0,   0.0,
+    0,  1,  0,  0,  1,   0.0,
+    0,  0,  1,  0,  0,   0.1;
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,0);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[0][1]);
+    EXPECT_EQ(3, bundles[0][2]);
+    EXPECT_EQ(2, bundles[1][0]);
+    EXPECT_EQ(1, bundles[1][1]);
+    EXPECT_EQ(0, bundles[1][2]);
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,1);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[0][1]);
+    EXPECT_EQ(3, bundles[0][2]);
+    EXPECT_EQ(2, bundles[1][0]);
+    EXPECT_EQ(1, bundles[1][1]);
+    EXPECT_EQ(0, bundles[1][2]);
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,2);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[0][1]);
+    EXPECT_EQ(3, bundles[0][2]);
+    EXPECT_EQ(2, bundles[0][3]);
+    EXPECT_EQ(1, bundles[1][0]);
+    EXPECT_EQ(0, bundles[1][1]);
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,6);
+    
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[0][1]);
+    EXPECT_EQ(3, bundles[0][2]);
+    EXPECT_EQ(2, bundles[0][3]);
+    EXPECT_EQ(1, bundles[0][4]);
+    EXPECT_EQ(0, bundles[0][5]);
+    
+};
+
+
+TEST_F(LightGBMTest, bundle_map_builder){
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train;
+    X_train = Eigen::MatrixXd(6,6);
+    
+    X_train <<
+    1,  0,  0,  1,  0,      0.0,
+    0,  2,  0,  0,  -2.3,   0.0,
+    0,  0,  1,  0,  0,      0.2,
+    1,  0,  0,  6,  0,      0.0,
+    0,  1,  0,  0,  0.01,   0.0,
+    0,  0,  1,  0,  0,      0.1;
+    
+    vector<vector<int>> bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,0);
+    
+    map<int, map<double,int>>result_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundles[0]);
+    
+    EXPECT_EQ(5, result_map[3][1]);
+    EXPECT_EQ(6, result_map[3][6]);
+    EXPECT_EQ(3, result_map[4][-2.3]);
+    EXPECT_EQ(4, result_map[4][0.01]);
+    EXPECT_EQ(2, result_map[5][0.1]);
+    EXPECT_EQ(1, result_map[5][0.2]);
+    
+    result_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundles[1]);
+    
+    EXPECT_EQ(4, result_map[0][1]);
+    EXPECT_EQ(3, result_map[1][1]);
+    EXPECT_EQ(2, result_map[1][2]);
+    EXPECT_EQ(1, result_map[2][1]);
+    
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,2);
+    result_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundles[0]);
+    
+    EXPECT_EQ(7, result_map[2][1]);
+    EXPECT_EQ(5, result_map[3][1]);
+    EXPECT_EQ(6, result_map[3][6]);
+    EXPECT_EQ(3, result_map[4][-2.3]);
+    EXPECT_EQ(4, result_map[4][0.01]);
+    EXPECT_EQ(2, result_map[5][0.1]);
+    EXPECT_EQ(1, result_map[5][0.2]);
+    
+    result_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundles[1]);
+    
+    EXPECT_EQ(3, result_map[0][1]);
+    EXPECT_EQ(2, result_map[1][1]);
+    EXPECT_EQ(1, result_map[1][2]);
+    
+}
+
+
+TEST_F(LightGBMTest, mapping){
+    
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train;
+    X_train = Eigen::MatrixXd(7,6);
+    
+    X_train <<
+    1,  0,  0,  1,  0,      0.0,
+    0,  2,  0,  0,  -2.3,   0.0,
+    0,  0,  1,  0,  0,      0.2,
+    1,  0,  0,  6,  0,      0.0,
+    0,  1,  0,  0,  0.01,   0.0,
+    0,  0,  1,  0,  0,      0.1,
+    0,  0,  0,  0,  0,      0.0;
+    
+    vector<vector<int>> bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,0);
+    vector<int> bundle = bundles[0];
+    map<int, map<double,int>>bundle_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundle);
+    Eigen::MatrixXd X_m = gbm.exclusive_feature_bundling.mapping(X_train,bundle,bundle_map);
+    
+    EXPECT_EQ(5, X_m(0,0));
+    EXPECT_EQ(3, X_m(1,0));
+    EXPECT_EQ(1, X_m(2,0));
+    EXPECT_EQ(6, X_m(3,0));
+    EXPECT_EQ(4, X_m(4,0));
+    EXPECT_EQ(2, X_m(5,0));
+    EXPECT_EQ(0, X_m(6,0));
+
+    bundle = bundles[1];
+    bundle_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundle);
+    X_m = gbm.exclusive_feature_bundling.mapping(X_train,bundle,bundle_map);
+    
+    EXPECT_EQ(4, X_m(0,0));
+    EXPECT_EQ(2, X_m(1,0));
+    EXPECT_EQ(1, X_m(2,0));
+    EXPECT_EQ(4, X_m(3,0));
+    EXPECT_EQ(3, X_m(4,0));
+    EXPECT_EQ(1, X_m(5,0));
+    EXPECT_EQ(0, X_m(6,0));
+    
+    bundles = gbm.exclusive_feature_bundling.greedy_bundling(X_train,2);
+    bundle = bundles[0];
+    bundle_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundle);
+    X_m = gbm.exclusive_feature_bundling.mapping(X_train,bundle,bundle_map);
+    
+    EXPECT_EQ(5, X_m(0,0));
+    EXPECT_EQ(3, X_m(1,0));
+    EXPECT_EQ(1, X_m(2,0));
+    EXPECT_EQ(6, X_m(3,0));
+    EXPECT_EQ(4, X_m(4,0));
+    EXPECT_EQ(2, X_m(5,0));
+    EXPECT_EQ(0, X_m(6,0));
+    
+    bundle = bundles[1];
+    bundle_map = gbm.exclusive_feature_bundling.bundle_map_builder(X_train, bundle);
+    X_m = gbm.exclusive_feature_bundling.mapping(X_train,bundle,bundle_map);
+    
+    EXPECT_EQ(3, X_m(0,0));
+    EXPECT_EQ(1, X_m(1,0));
+    EXPECT_EQ(0, X_m(2,0));
+    EXPECT_EQ(3, X_m(3,0));
+    EXPECT_EQ(2, X_m(4,0));
+    EXPECT_EQ(0, X_m(5,0));
+    EXPECT_EQ(0, X_m(6,0));
+    
+}
+
+
+TEST_F(LightGBMTest, EFB_fit){
+    
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train;
+    X_train = Eigen::MatrixXd(7,6);
+    
+    X_train <<
+    1,  0,  0,  1,  0,      0.0,
+    0,  2,  0,  0,  -2.3,   0.0,
+    0,  0,  1,  0,  0,      0.2,
+    1,  0,  0,  6,  0,      0.0,
+    0,  1,  0,  0,  0.01,   0.0,
+    0,  0,  1,  0,  0,      0.1,
+    0,  0,  0,  0,  0,      0.0;
+    
+    gbm.exclusive_feature_bundling.fit(X_train, 0);
+    
+    auto& bundles = gbm.exclusive_feature_bundling.bundles;
+    auto& bundles_map = gbm.exclusive_feature_bundling.bundles_map;
+    
+    EXPECT_EQ(2, bundles.size());
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[0][1]);
+    EXPECT_EQ(3, bundles[0][2]);
+    EXPECT_EQ(2, bundles[1][0]);
+    EXPECT_EQ(1, bundles[1][1]);
+    EXPECT_EQ(0, bundles[1][2]);
+    
+    EXPECT_EQ(2, bundles_map.size());
+    EXPECT_EQ(3, bundles_map[0].size());
+    EXPECT_EQ(1, bundles_map[0][5][0.2]);
+    EXPECT_EQ(2, bundles_map[0][5][0.1]);
+    EXPECT_EQ(3, bundles_map[0][4][-2.3]);
+    EXPECT_EQ(4, bundles_map[0][4][0.01]);
+    EXPECT_EQ(5, bundles_map[0][3][1]);
+    EXPECT_EQ(6, bundles_map[0][3][6]);
+    
+    EXPECT_EQ(3, bundles_map[1].size());
+    EXPECT_EQ(1, bundles_map[1][2][1]);
+    EXPECT_EQ(2, bundles_map[1][1][2]);
+    EXPECT_EQ(3, bundles_map[1][1][1]);
+    EXPECT_EQ(4, bundles_map[1][0][1]);
+
+    
+    gbm.exclusive_feature_bundling.fit(X_train, 2);
+    
+    bundles = gbm.exclusive_feature_bundling.bundles;
+    bundles_map = gbm.exclusive_feature_bundling.bundles_map;
+    
+    EXPECT_EQ(2, bundles.size());
+    EXPECT_EQ(5, bundles[0][0]);
+    EXPECT_EQ(4, bundles[0][1]);
+    EXPECT_EQ(3, bundles[0][2]);
+    EXPECT_EQ(2, bundles[0][3]);
+    EXPECT_EQ(1, bundles[1][0]);
+    EXPECT_EQ(0, bundles[1][1]);
+    
+    EXPECT_EQ(2, bundles_map.size());
+    EXPECT_EQ(4, bundles_map[0].size());
+    EXPECT_EQ(1, bundles_map[0][5][0.2]);
+    EXPECT_EQ(2, bundles_map[0][5][0.1]);
+    EXPECT_EQ(3, bundles_map[0][4][-2.3]);
+    EXPECT_EQ(4, bundles_map[0][4][0.01]);
+    EXPECT_EQ(5, bundles_map[0][3][1]);
+    EXPECT_EQ(6, bundles_map[0][3][6]);
+    EXPECT_EQ(7, bundles_map[0][2][1]);
+    
+    EXPECT_EQ(2, bundles_map[1].size());
+    EXPECT_EQ(1, bundles_map[1][1][2]);
+    EXPECT_EQ(2, bundles_map[1][1][1]);
+    EXPECT_EQ(3, bundles_map[1][0][1]);
+    
+}
+
+
+TEST_F(LightGBMTest, transfrom){
+    
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train, X_result, X_train_2;
+    X_train = Eigen::MatrixXd(7,6);
+    
+    X_train <<
+    1,  0,  0,  1,  0,      0.0,
+    0,  2,  0,  0,  -2.3,   0.0,
+    0,  0,  1,  0,  0,      0.2,
+    1,  0,  0,  6,  0,      0.0,
+    0,  1,  0,  0,  0.01,   0.0,
+    0,  0,  1,  0,  0,      0.1,
+    0,  0,  0,  0,  0,      0.0;
+    
+    X_train_2 = Eigen::MatrixXd(4,6);
+    X_train_2 <<
+    1,  0,  1,  1,  0,      0.0,
+    0,  2,  0,  0,  0,      0.0,
+    1,  1,  0,  0,  -2.3,   0.1,
+    0,  0,  0,  6,  0,      0.0;
+
+    gbm.exclusive_feature_bundling.fit(X_train, 0);
+    X_result = gbm.exclusive_feature_bundling.transform(X_train);
+    
+    EXPECT_EQ(5, X_result(0,0));
+    EXPECT_EQ(3, X_result(1,0));
+    EXPECT_EQ(1, X_result(2,0));
+    EXPECT_EQ(6, X_result(3,0));
+    EXPECT_EQ(4, X_result(4,0));
+    EXPECT_EQ(2, X_result(5,0));
+    EXPECT_EQ(0, X_result(6,0));
+    
+    EXPECT_EQ(4, X_result(0,1));
+    EXPECT_EQ(2, X_result(1,1));
+    EXPECT_EQ(1, X_result(2,1));
+    EXPECT_EQ(4, X_result(3,1));
+    EXPECT_EQ(3, X_result(4,1));
+    EXPECT_EQ(1, X_result(5,1));
+    EXPECT_EQ(0, X_result(6,1));
+    
+    X_result = gbm.exclusive_feature_bundling.transform(X_train_2);
+    
+    EXPECT_EQ(5, X_result(0,0));
+    EXPECT_EQ(0, X_result(1,0));
+    EXPECT_EQ(2, X_result(2,0));
+    EXPECT_EQ(6, X_result(3,0));
+    
+    EXPECT_EQ(1, X_result(0,1));
+    EXPECT_EQ(2, X_result(1,1));
+    EXPECT_EQ(3, X_result(2,1));
+    EXPECT_EQ(0, X_result(3,1));
+    
+    
+    gbm.exclusive_feature_bundling.fit(X_train, 2);
+    X_result = gbm.exclusive_feature_bundling.transform(X_train);
+    
+    EXPECT_EQ(5, X_result(0,0));
+    EXPECT_EQ(3, X_result(1,0));
+    EXPECT_EQ(1, X_result(2,0));
+    EXPECT_EQ(6, X_result(3,0));
+    EXPECT_EQ(4, X_result(4,0));
+    EXPECT_EQ(2, X_result(5,0));
+    EXPECT_EQ(0, X_result(6,0));
+    
+    EXPECT_EQ(3, X_result(0,1));
+    EXPECT_EQ(1, X_result(1,1));
+    EXPECT_EQ(0, X_result(2,1));
+    EXPECT_EQ(3, X_result(3,1));
+    EXPECT_EQ(2, X_result(4,1));
+    EXPECT_EQ(0, X_result(5,1));
+    EXPECT_EQ(0, X_result(6,1));
+    
+    X_result = gbm.exclusive_feature_bundling.transform(X_train_2);
+    
+    EXPECT_EQ(5, X_result(0,0));
+    EXPECT_EQ(0, X_result(1,0));
+    EXPECT_EQ(2, X_result(2,0));
+    EXPECT_EQ(6, X_result(3,0));
+    
+    EXPECT_EQ(3, X_result(0,1));
+    EXPECT_EQ(1, X_result(1,1));
+    EXPECT_EQ(2, X_result(2,1));
+    EXPECT_EQ(0, X_result(3,1));
+    
+}
+
+TEST_F(LightGBMTest, fit_transfrom){
+    LightGBM_clf gbm;
+    Eigen::MatrixXd X_train, X_result;
+    X_train = Eigen::MatrixXd(7,6);
+    
+    X_train <<
+    1,  0,  0,  1,  0,      0.0,
+    0,  2,  0,  0,  -2.3,   0.0,
+    0,  0,  1,  0,  0,      0.2,
+    1,  0,  0,  6,  0,      0.0,
+    0,  1,  0,  0,  0.01,   0.0,
+    0,  0,  1,  0,  0,      0.1,
+    0,  0,  0,  0,  0,      0.0;
+    
+    X_result = gbm.exclusive_feature_bundling.fit_transform(X_train);
+    
+    EXPECT_EQ(5, X_result(0,0));
+    EXPECT_EQ(3, X_result(1,0));
+    EXPECT_EQ(1, X_result(2,0));
+    EXPECT_EQ(6, X_result(3,0));
+    EXPECT_EQ(4, X_result(4,0));
+    EXPECT_EQ(2, X_result(5,0));
+    EXPECT_EQ(0, X_result(6,0));
+    
+    EXPECT_EQ(4, X_result(0,1));
+    EXPECT_EQ(2, X_result(1,1));
+    EXPECT_EQ(1, X_result(2,1));
+    EXPECT_EQ(4, X_result(3,1));
+    EXPECT_EQ(3, X_result(4,1));
+    EXPECT_EQ(1, X_result(5,1));
+    EXPECT_EQ(0, X_result(6,1));
+    
+    
+    X_result = gbm.exclusive_feature_bundling.fit_transform(X_train, 2);
+    
+    EXPECT_EQ(5, X_result(0,0));
+    EXPECT_EQ(3, X_result(1,0));
+    EXPECT_EQ(1, X_result(2,0));
+    EXPECT_EQ(6, X_result(3,0));
+    EXPECT_EQ(4, X_result(4,0));
+    EXPECT_EQ(2, X_result(5,0));
+    EXPECT_EQ(0, X_result(6,0));
+    
+    EXPECT_EQ(3, X_result(0,1));
+    EXPECT_EQ(1, X_result(1,1));
+    EXPECT_EQ(0, X_result(2,1));
+    EXPECT_EQ(3, X_result(3,1));
+    EXPECT_EQ(2, X_result(4,1));
+    EXPECT_EQ(0, X_result(5,1));
+    EXPECT_EQ(0, X_result(6,1));
+    
 }
 
 

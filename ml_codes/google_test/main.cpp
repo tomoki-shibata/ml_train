@@ -49,10 +49,17 @@ int main(int argc, const char * argv[])
     }
     cout<<denomi.cols()<<endl;
     cout<<denomi.rows()<<endl;
+    
+    
+    Eigen::MatrixXd A = Eigen::MatrixXd(3,3);
+    A <<
+    1,1,1,
+    2,2,2,
+    3,3,3;
+    
+    Eigen::VectorXd C = Eigen::VectorXd(3);
+    C << 2,2,2;
     */
-    
-    
-    
     
     ::testing::InitGoogleTest(&argc, (char **)argv);
     return RUN_ALL_TESTS();

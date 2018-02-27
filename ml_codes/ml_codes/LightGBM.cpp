@@ -280,9 +280,10 @@ map<double,Eigen::MatrixXd> LightGBM_clf::make_cash_result(const Eigen::MatrixXd
         
         // 世代でループ
         vector<LightGBM_CLF_tree> &trees = labeled_trees.second;
-        for(int i = 0;i <= generation;++i){
+        //for(int i = 0;i <= generation;++i){
+        for(int i = 0;i < generation;++i){
             cash[label] += trees[i].predict(X);
-            }
+        }
     }
     
     return cash;
@@ -404,6 +405,7 @@ void LightGBM_clf::init_0_generation_trees(vector<double>& label_list, map<doubl
 void LightGBM_clf::fit(const Eigen::MatrixXd &X, const Eigen::MatrixXd &y){
     
     //乱数初期化
+    param.random_seed = 0;
     rand->mt_rand.seed(param.random_seed);
     
     // データセット
@@ -429,7 +431,7 @@ void LightGBM_clf::fit(const Eigen::MatrixXd &X, const Eigen::MatrixXd &y){
         neg_gradient = neg_gradient_cross_entropy(*y_train);
         neg_factored_gradient = factor_neg_gradient(param.high_gradient_sampling_ratio, param.low_gradient_sampling_ratio);
         // GOS-sampling
-        map<double,std::vector<int>> data_idx_map = rand->GOS_sampling(neg_gradient, param.high_gradient_sampling_ratio, param.low_gradient_sampling_ratio);
+        map<double,vector<int>> data_idx_map = rand->GOS_sampling(neg_gradient, param.high_gradient_sampling_ratio, param.low_gradient_sampling_ratio);
         
         for(const double label : label_list){
             forest[label][i].forest_generation = i;
@@ -490,5 +492,177 @@ Eigen::MatrixXd LightGBM_clf::predict(const Eigen::MatrixXd& X_test){
     return max_prob_label;
     
 };
+
+
+///////////////////////////////////////////////
+// EFB
+///////////////////////////////////////////////
+
+//LightGBM_clf::EFB::~EFB(){};
+
+vector<int> LightGBM_clf::EFB::non_0_count(const Eigen::MatrixXd& X){
+    // 0でない要素のカウント
+    vector<int> non_0_cnt(X.cols());
+
+    for(int i = 0;i < X.cols(); ++i){
+        non_0_cnt[i] = (int)(X.col(i).array() != 0.0).count();
+    }
+    return non_0_cnt;
+};
+
+
+int LightGBM_clf::EFB::conflict_count(const Eigen::MatrixXd& col_1,const Eigen::MatrixXd& col_2){
+    // 0でない要素のバッティングのカウント
+    int conflict_cnt;
+    conflict_cnt = 0;
+    for(int i = 0;i < col_1.rows();++i){
+        if((col_1(i,0) != 0) && (col_2(i,0) != 0)){
+            conflict_cnt++;
+        }
+    }
+    return conflict_cnt;
+};
+
+
+vector<vector<int>> LightGBM_clf::EFB::greedy_bundling(const Eigen::MatrixXd& X,int max_conflict_count){
+    vector<vector<int>> bundles;//bundleのベクタ
+    vector<int> sum_conflicts;//bundle毎のコンフリクト
+    
+    // 特徴量毎の非0要素のカウント
+    vector<int>non_0_cnt = non_0_count(X);
+    
+    //　特徴量の非0要素の数でソート
+    multimap<int,int> sorted_col_idx;
+    for(int col_idx = 0; col_idx < non_0_cnt.size();++col_idx){
+        sorted_col_idx.emplace(non_0_cnt[col_idx], col_idx);
+    }
+    
+    // ソート結果を降順で参照&初回の処理
+    auto iter = sorted_col_idx.rbegin();
+    int col_idx = iter->second;
+    bundles.push_back(vector<int>{col_idx});
+    sum_conflicts.push_back(0);
+    ++iter;
+    
+    // 特徴量でループ(降順)
+    while(iter != sorted_col_idx.rend()){
+        // bundle追加フラグ
+        bool new_bundle = true;
+        
+        // 特徴量の列のidx取得
+        col_idx = iter->second;
+        
+        // bundleでループ
+        for(int i = 0; i < bundles.size(); ++i){
+            int conflict = 0;
+            
+            // bundle内の特徴量でループ
+            for(auto& b_col_idx : bundles[i]){
+                conflict += conflict_count(X.col(col_idx), X.col(b_col_idx));
+            }
+            
+            if(sum_conflicts[i] + conflict <= max_conflict_count){
+                bundles[i].push_back(col_idx);
+                sum_conflicts[i] += conflict;
+                new_bundle = false;
+                break;
+            }
+        }
+        
+        // bundleの追加
+        if(new_bundle){
+            bundles.push_back(vector<int>{col_idx});
+            sum_conflicts.push_back(0);
+        }
+        
+        // ループ用の処理
+        ++iter;
+    }
+   
+    return bundles;
+    
+};
+
+
+map<int, map<double,int>> LightGBM_clf::EFB::bundle_map_builder(const Eigen::MatrixXd& X, vector<int>&bundle){
+    //中間出力として、インプットに対するmap<int(特徴量のidx),map<double(特徴量の値),int(出力値)>>
+    map<int, map<double,int>>result_map;
+    int output_val;
+    // ゼロを入れて初期化
+    output_val = 0;
+    
+    // bundle内のカラムでループ
+    for(auto& col_idx : bundle){
+        map<double, int>& col_map = result_map[col_idx];
+        
+        // Xの行でループ
+        for(int row_idx = 0; row_idx < X.rows();++row_idx){
+            // 0でなく、同じ特徴量で同じ出力がないとき、++output_val & col_mapにoutput_valに追加。
+            if((X(row_idx,col_idx) != 0)&&(col_map.count(X(row_idx,col_idx)) == 0)){
+                ++output_val;
+                col_map[X(row_idx,col_idx)] = output_val;
+            }
+        }
+    }
+    
+    return result_map;
+};
+
+
+Eigen::MatrixXd LightGBM_clf::EFB::mapping(const Eigen::MatrixXd& X, vector<int>&bundle, map<int, map<double,int>> bundle_map){
+    Eigen::MatrixXd result_vec(X.rows(),1);
+    
+    // Xの行でループ
+    for(int row_idx = 0; row_idx < X.rows();++row_idx){
+        
+        // 0で初期化
+        result_vec(row_idx,0) = 0;
+        
+        // bundle内のカラムでループ
+        for(auto& col_idx : bundle){
+            //X(row_idx,col_idx)　!= 0の時、bundle_mapの値をresult_vecに代入&カラムループから出る。
+            double data_val = X(row_idx,col_idx);
+            if(data_val != 0){
+                result_vec(row_idx,0) = bundle_map[col_idx][data_val];
+                break;
+            }
+        }
+        
+    }
+   
+    return result_vec;
+};
+
+
+void LightGBM_clf::EFB::fit(const Eigen::MatrixXd& X, int max_conflict_count = 0){
+    // conflictを数え上げて、bundleを作成。
+    bundles = greedy_bundling(X, max_conflict_count);
+    
+    // bundle毎にを作成。
+    bundles_map.resize(0);
+    for(int bundle_idx = 0; bundle_idx < bundles.size(); ++bundle_idx){
+        bundles_map.push_back(bundle_map_builder(X, bundles[bundle_idx]));
+    }
+};
+
+
+Eigen::MatrixXd LightGBM_clf::EFB::transform(const Eigen::MatrixXd& X){
+    Eigen::MatrixXd merge_result;
+    merge_result = Eigen::MatrixXd(X.rows(),bundles.size());
+    
+    // バンドル毎に特徴量を作成。
+    for(int bundle_idx = 0; bundle_idx < bundles.size(); ++bundle_idx){
+        merge_result.col(bundle_idx) = mapping(X, bundles[bundle_idx], bundles_map[bundle_idx]);
+    }
+    
+    return merge_result;
+};
+
+
+Eigen::MatrixXd LightGBM_clf::EFB::fit_transform(const Eigen::MatrixXd& X,int max_conflict_count){
+        fit(X, max_conflict_count);
+        return transform(X);
+};
+
 
 
